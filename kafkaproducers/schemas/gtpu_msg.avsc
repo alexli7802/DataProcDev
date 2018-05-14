@@ -1,5 +1,5 @@
 {
-    "namespace": "cellos.schemas",
+    "namespace": "cellos.messages.avro",
     "name": "gtpu_report",
     "type": "record",
     "fields": [

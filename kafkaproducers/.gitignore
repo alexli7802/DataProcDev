@@ -4,3 +4,4 @@
 /bin/
 .cache-main
 .cache-tests
+src/main/scala/cellos/messages/
