@@ -1,0 +1,14 @@
+{
+    "namespace": "cellos.schemas",
+    "name": "gtpu_report",
+    "type": "record",
+    "fields": [
+        {"name": "imsi", "type": "string"},
+        {"name": "bearer_start", "type": "string"},
+        {"name": "reason", "type": "string"},
+        {"name": "fst_pkt_ts", "type": "string"},
+        {"name": "lst_pkt_ts", "type": "string"},
+        {"name": "ul_bytes", "type": "long"},
+        {"name": "dw_bytes", "type": "long"}
+    ]
+}
