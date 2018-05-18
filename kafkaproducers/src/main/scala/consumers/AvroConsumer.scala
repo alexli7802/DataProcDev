@@ -41,26 +41,32 @@ object AvroConsumer {
   def main(args: Array[String]): Unit = {
     
     val topic = common.AllConf.getString("kafkaCluster.topics.gtpu")
-    
-    val tparts = consumer.partitionsFor(topic)
-                  .map(p => new TopicPartition(p.topic(), p.partition()) )
-                  .toList
-    consumer.assign(tparts)
 
+    val allTopics = consumer.listTopics().keySet().filterNot(_.startsWith("__"))
     
-    val stats = {
-      val b_offsets = consumer.beginningOffsets(tparts)
-      val e_offsets = consumer.endOffsets(tparts)
+    allTopics.foreach { t => 
       
-      tparts.map(p => {
-        val cmted = consumer.committed(p)
-        val cmtOffset = if (cmted == null) 0 else cmted.offset() 
-        PartitionStatus(p, b_offsets(p), e_offsets(p), cmtOffset)
-      })
+      val tparts = consumer.partitionsFor(t)
+                    .map(p => new TopicPartition(p.topic(), p.partition()) )
+                    .toList
+      if (t == topic) consumer.assign(tparts)
       
+      val stats = {
+        val b_offsets = consumer.beginningOffsets(tparts)
+        val e_offsets = consumer.endOffsets(tparts)
+        
+        tparts.map(p => {
+          val cmted = consumer.committed(p)
+          val cmtOffset = if (cmted == null) 0 else cmted.offset() 
+          PartitionStatus(p, b_offsets(p), e_offsets(p), cmtOffset)
+        })
+      }
+
+      val totalCnt = stats.map(s => (s.eOffset - s.sOffset)).sum
+      
+      println(s"[$t] overall: $totalCnt / ${stats.length}")
+      stats.foreach(s => println("\t" + s.toString))
     }
-
-    stats.foreach(println)
   }
   
 }
