@@ -5,6 +5,14 @@ import java.nio.ByteBuffer
 import org.apache.kafka.clients.consumer.{KafkaConsumer,ConsumerRecord}
 import org.apache.kafka.common.TopicPartition
 import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
+
+case class PartitionStatus(part: TopicPartition, sOffset: Long, eOffset: Long, lstCommitted: Long) {
+  override def toString = {
+    val len = eOffset - sOffset
+    s"${part.topic()}:${part.partition()}: len=$len, [$sOffset - $eOffset], committed-at: $lstCommitted"
+  }
+}
 
 object AvroConsumer {
   
@@ -28,26 +36,31 @@ object AvroConsumer {
     
   } 
  
+  
+  
   def main(args: Array[String]): Unit = {
     
     val topic = common.AllConf.getString("kafkaCluster.topics.gtpu")
-
-//    consumer.subscribe(List(topic))
-    val parts = consumer.partitionsFor(topic)
-    val tparts = parts.map(p => new TopicPartition(topic, p.partition()))
-
-    consumer.beginningOffsets(tparts).foreach(println)
-    consumer.endOffsets(tparts).foreach(println)
-
-    consumer.assign(tparts)
-    consumer.assignment().foreach(println)
     
-    val metrics = consumer.metrics()
-    metrics.keySet().foreach(println)
+    val tparts = consumer.partitionsFor(topic)
+                  .map(p => new TopicPartition(p.topic(), p.partition()) )
+                  .toList
+    consumer.assign(tparts)
 
-    tparts.foreach(p => {
-      println(s"committed ${p.topic()}: " + consumer.committed(p) + s", next: ${consumer.position(p)}")
-    })
+    
+    val stats = {
+      val b_offsets = consumer.beginningOffsets(tparts)
+      val e_offsets = consumer.endOffsets(tparts)
+      
+      tparts.map(p => {
+        val cmted = consumer.committed(p)
+        val cmtOffset = if (cmted == null) 0 else cmted.offset() 
+        PartitionStatus(p, b_offsets(p), e_offsets(p), cmtOffset)
+      })
+      
+    }
+
+    stats.foreach(println)
   }
   
 }
