@@ -35,8 +35,13 @@ object AvroConsumer {
   lazy val consumer = new KafkaConsumer[String,ByteBuffer](props)
   
   // infinite loop for processing Kafka records !!!
-  def process(): Unit = {
+  def process(num: Int): Unit = {
     
+    var left_times = num
+    while (left_times < 0 || left_times > 0) {
+      singlePoll()
+      left_times -= 1
+    }
   } 
  
  
@@ -55,23 +60,26 @@ object AvroConsumer {
     val poll_ms = common.AllConf.getInteger("kafkaCluster.consumer.timeouts.poll_ms")
     val cdrs = consumer.poll(poll_ms)     // timeout for poll = 100ms
 		println(s"consumer polls ${cdrs.count()} messages --->")
-      
-    // batch-processing
-		val (fst, lst) = {
-      val l = cdrs.iterator().toList
-      (l.head, l.last)
-    }
-    
-    println(s"\t${fst.topic()}-${fst.partition()} [offset=${fst.offset()}]: " + gtpu_report.fromByteBuffer(fst.value()))              
-    println("\t... ...")
-    println(s"\t${lst.topic()}-${lst.partition()} [offset=${lst.offset()}]: " + gtpu_report.fromByteBuffer(lst.value()))              
 
-    cdrs.foreach(cdr => {
-      val msg = gtpu_report.fromByteBuffer(cdr.value())
-//      println(s"${cdr.topic()}-${cdr.partition()} [offset=${cdr.offset()}]: " + msg)              
-    })
+		val srcParts = cdrs.partitions()
+		srcParts.foreach(p => {
+		  val rs = cdrs.records(p)
+		  println(s"\t$p => ${rs.length} messages: [${rs.head.offset()}, ${rs.last.offset()}]")
+		  
+		  val gtpu_cdrs = rs.map(r => gtpu_report.fromByteBuffer(r.value()))
+		})
    
+		Thread.sleep(3000)
     consumer.commitSync()
+    
+    // the most important 'consumer-metric': records-lag    
+    val metrics = consumer.metrics()
+
+    val recordsLag = metrics.apply(
+        metrics.keySet().filter(_.name() == "records-lag").head
+      )
+    
+    println("records-lag: " + recordsLag.metricValue())
   }
   
   // application entries here ----->
@@ -89,7 +97,8 @@ object AvroConsumer {
     partStats.foreach(s => println("\t" + s.toString))
     
     //consuming
-    singlePoll()
+    val poll_mode = common.AllConf.getInteger("kafkaCluster.consumer.poll_mode")
+    process(poll_mode)
   }
   
 }
