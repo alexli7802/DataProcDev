@@ -7,7 +7,7 @@ lazy val root = (project in file(".")).
       scalaVersion := "2.12.5",
       version      := "0.1.0-SNAPSHOT"
     )),
-    name := "KafkaProducers",
+    name := "DataDev_Kafka",
     libraryDependencies ++= Seq(
         scalaTest % Test,
         kafka,
