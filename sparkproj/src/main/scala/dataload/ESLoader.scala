@@ -33,29 +33,27 @@ object ESLoader {
   
   // test with a simple made-up file
   def test(): Unit = {
-    val srcFile = "/home/ali/github/DataProcDev/sparkproj/data/csv/staff.csv"
-    val scma = StructType( 
-        Seq("name", "department", "age", "email", "ParseFailed")
-          .map(new StructField(_, StringType, true))  
-      )    
-      
-    val csvReader = ss.read.format("csv")
-      .option("head", "false")
-      .option("sep", ",")
-      .option("quote", "\'")
-      .option("comment", "#")
-      .option("mode", "PERMISSIVE")
-      .option("columnNameOfCorruptRecord", "ParseFailed")
-      .schema(scma)
-
-    val ds = ss.read.textFile(srcFile)
-    println("loaded lines: " + ds.count())
-
-    val df = csvReader.csv(srcFile)
     
-    df.show(false)
+    import testdata.Employees
+    val df0 = ss.createDataFrame(Employees.samples)        
     
-    df.saveToEs("spark/docs")
+    val df1 = df0.select(
+      col("name"),
+      col("dob").cast("date"),                       // call to 'sql.functions.to_date(...)'
+      col("dob").cast("timestamp") as "dob_ts",      // call to 'sql.functions.to_timestamp(...)'
+      col("age").cast("double"),
+      col("isMale").cast("boolean"),
+      col("children").cast("int")
+    )
+
+    df1.show(false)
+    
+//    df1.saveToEs("ali_employees2/doc")
+    df1.write.format("org.elasticsearch.spark.sql")
+      .mode("overwrite")
+      .option("es.resource", "ali_employees2/doc")
+      .option("es.resource.write", "ali_employees2/{dob_ts|yyyy-MM-dd}")
+      .save()
   }
 
   // ------------- write ctrl reports into ES -------------------- 
@@ -101,14 +99,14 @@ object ESLoader {
   def main(args: Array[String]): Unit = {
     
     println("=========== dataload.ESLoader ===========")
-//    test()
+    test()
 
     //write to ES
 //    val gtpcFile = "/home/ali/gitlab/bigdata_analytics_test_data/RA_DU_Data/1001014_GTPC_20170717170000.dat"
 //    loadGTPC(gtpcFile)
     
     //read from ES
-    readGTPC()
+//    readGTPC()
   }
   
   
