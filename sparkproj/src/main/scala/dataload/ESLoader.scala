@@ -5,6 +5,7 @@ package dataload
  * 				1. elasticsearch.yml ---->  network.host: 0.0.0.0
  * 				2. limit on open-file-handles -----> sudo su; ulimit -n 65536; su
  * 				3. increase mmap counts -----> sysctl -w vm.max_map_count=262144
+ * 				4. PUT 'mappings' for field data types per your index/type
  * 
  * 		spark.app
  * 			- sbt assembly
@@ -52,7 +53,7 @@ object ESLoader {
     df1.write.format("org.elasticsearch.spark.sql")
       .mode("overwrite")
       .option("es.resource", "ali_employees2/doc")
-      .option("es.resource.write", "ali_employees2/{dob_ts|yyyy-MM-dd}")
+//      .option("es.resource.write", "ali_employees2/{dob|yyyy-MM-dd}")
       .save()
   }
 
