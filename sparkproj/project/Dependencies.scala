@@ -9,6 +9,7 @@ object Dependencies {
     )
     
   lazy val esDeps = "org.elasticsearch" %% "elasticsearch-spark-20" % "6.2.4"
+  lazy val avroSupp = "com.databricks" %% "spark-avro" % "4.0.0"
 }
 
 

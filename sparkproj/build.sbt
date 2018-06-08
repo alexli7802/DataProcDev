@@ -10,5 +10,6 @@ lazy val root = (project in file(".")).
     name := "DataDev_Spark",
     libraryDependencies += scalaTest % Test,
     libraryDependencies ++= sparkDeps,
-    libraryDependencies += esDeps
+    libraryDependencies += esDeps,
+    libraryDependencies += avroSupp
   )
