@@ -13,6 +13,8 @@ package poc.avro
  *  run:
  *  java -cp path/to/???.jar poc.avro.BasicTest
  *  
+ *  library dependency:
+ *  	- "org.apache.avro" % "avro" % "1.8.2"
  * */
 
 

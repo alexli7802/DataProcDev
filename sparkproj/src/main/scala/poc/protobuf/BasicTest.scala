@@ -13,6 +13,11 @@ package poc.protobuf
  *  run:
  *  java -cp path/to/???.jar poc.protobuf.BasicTest
  * 
+ *  library dependency:
+ *  	- ???
+ *  
+ *  reference link: 
+ *  	- https://github.com/google/protobuf
  * */
 
 
